@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script>
+      // Defensive fix for "Cannot set property fetch of #<Window> which has only a getter"
+      // This error often occurs when libraries try to polyfill fetch in environments where it's read-only.
+      // We must run this BEFORE any other scripts that might trigger the error.
+      (function() {
+        const applyFetchFix = (target, name) => {
+          try {
+            if (typeof target !== 'undefined' && target[name]) {
+              const descriptor = Object.getOwnPropertyDescriptor(target, name);
+              if (descriptor && !descriptor.writable && !descriptor.set && descriptor.configurable) {
+                const originalValue = target[name];
+                try {
+                  Object.defineProperty(target, name, {
+                    configurable: true,
+                    enumerable: true,
+                    get: () => originalValue,
+                    set: (v) => { 
+                      console.warn(`[Fetch Fix] Something tried to overwrite ${name}, ignoring:`, v);
+                    }
+                  });
+                } catch (e) {
+                  console.error(`[Fetch Fix] Failed to defineProperty on ${name}:`, e);
+                }
+              }
+            }
+          } catch (e) {
+            console.error(`[Fetch Fix] Error during initialization for ${name}:`, e);
+          }
+        };
+
+        if (typeof window !== 'undefined') {
+          applyFetchFix(window, 'fetch');
+          applyFetchFix(window, 'Headers');
+          applyFetchFix(window, 'Request');
+          applyFetchFix(window, 'Response');
+        }
+        if (typeof globalThis !== 'undefined') {
+          applyFetchFix(globalThis, 'fetch');
+          applyFetchFix(globalThis, 'Headers');
+          applyFetchFix(globalThis, 'Request');
+          applyFetchFix(globalThis, 'Response');
+        }
+        if (typeof self !== 'undefined') {
+          applyFetchFix(self, 'fetch');
+          applyFetchFix(self, 'Headers');
+          applyFetchFix(self, 'Request');
+          applyFetchFix(self, 'Response');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
